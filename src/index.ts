@@ -2,6 +2,7 @@ import Discord from 'discord.js';
 import dotenv from 'dotenv';
 import deploy from './deploy.js';
 import Data from './data.js';
+import { createGraph } from './graph.js';
 dotenv.config();
 
 const client = new Discord.Client({
@@ -18,6 +19,7 @@ client.login(process.env.DISCORD_TOKEN);
 
 client.on('interactionCreate', async (interaction) => {
 	if (interaction.isAutocomplete()) {
+		if (process.env.DEV_MODE) return;
 		const districts = await Data.getDistricts();
 		const search = interaction.options.getFocused();
 		interaction.respond(
@@ -36,6 +38,7 @@ client.on('interactionCreate', async (interaction) => {
 
 	if (interaction.isCommand()) {
 		if (interaction.commandName === 'warnstufe') {
+			if (process.env.DEV_MODE) return;
 			const district = interaction.options.getString('landkreis');
 
 			if (!district) {
@@ -145,6 +148,57 @@ client.on('interactionCreate', async (interaction) => {
 
 			interaction.reply({
 				embeds: [embed],
+			});
+		}
+		if (interaction.commandName === 'warnstufe-graph') {
+			const district = interaction.options.getString('landkreis');
+
+			if (!district) {
+				interaction.reply({
+					embeds: [
+						new Discord.MessageEmbed()
+							.setTitle('Fehler')
+							.setDescription('Bitte gib einen Landkreis an.'),
+					],
+				});
+				return;
+			}
+
+			const data = await Data.getData();
+			const districtData = data[district];
+			if (!districtData) {
+				interaction.reply({
+					embeds: [
+						new Discord.MessageEmbed()
+							.setTitle('Fehler')
+							.setDescription(`Es wurden keine Daten für ${district} gefunden.`),
+					],
+				});
+				return;
+			}
+
+			const dates = Object.keys(districtData);
+			const datesData = dates.map((date) => districtData[date]);
+
+			const colors = [
+				{
+					color: '#e6e600',
+					minValue: 0,
+				},
+				{
+					color: '#ffa500',
+					minValue: 1,
+				},
+				{
+					color: '#ff0000',
+					minValue: 2,
+				},
+			];
+
+			let image = await createGraph(dates, datesData, colors);
+
+			interaction.reply({
+				files: [image],
 			});
 		}
 	}

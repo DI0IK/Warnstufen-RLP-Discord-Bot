@@ -100,11 +100,37 @@ export default async function deploy(client: Client) {
 				},
 			],
 		},
+		{
+			name: 'warnstufe-graph',
+			description:
+				'Warnstufe eines Landkreises oder einer Kreisstadt abfragen und als Grafik darstellen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'landkreis',
+					description: 'Landkreis',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
 	];
 
 	await Rest.put(Routes.applicationCommands(client.user!.id || process.env.DISCORD_CLIENT_ID), {
 		body: Commands,
 	});
+
+	await Rest.put(
+		Routes.applicationGuildCommands(
+			client.user!.id || process.env.DISCORD_CLIENT_ID,
+			'714890515539165304'
+		),
+		{
+			body: Commands,
+		}
+	);
 
 	console.log('Commands successfully deployed');
 }
