@@ -151,6 +151,7 @@ client.on('interactionCreate', async (interaction) => {
 			});
 		}
 		if (interaction.commandName === 'warnstufe-graph') {
+			if (process.env.DEV_MODE) return;
 			const district = interaction.options.getString('landkreis');
 
 			if (!district) {
