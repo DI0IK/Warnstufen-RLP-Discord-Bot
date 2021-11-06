@@ -1,5 +1,4 @@
 import axios from 'axios';
-import https from 'https';
 
 export default class DataClass {
 	public static async getData(): Promise<Data> {
