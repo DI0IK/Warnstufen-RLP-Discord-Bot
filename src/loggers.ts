@@ -37,7 +37,7 @@ export function webhookClientInit(client: Client) {
 	});
 	client.on('interactionCreate', (i) => {
 		if (i.isCommand()) {
-			if (!['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName)) return;
+			if (['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName)) return;
 			webhookClient.send({
 				embeds: [
 					new MessageEmbed()
@@ -94,8 +94,8 @@ function getServerEmbed(client: Client, guildId: string) {
 		.addField('Channel count', guild.channels.cache.size.toString())
 		.addField('Role count', guild.roles.cache.size.toString())
 		.addField('Created At', `<t:${Math.round((guild.createdTimestamp || 0) / 1000)}:T>`)
-		.addField('Roles', guild.roles.cache.map((r) => r.name).join(', ') || 'None')
-		.addField('Channels', guild.channels.cache.map((c) => c.name).join(', ') || 'None');
+		.addField('Roles', guild.roles.cache.map((r) => r.name).join('\n') || 'None')
+		.addField('Channels', guild.channels.cache.map((c) => c.name).join('\n') || 'None');
 }
 
 async function getUserEmbed(client: Client, userId: string) {
@@ -112,7 +112,7 @@ async function getUserEmbed(client: Client, userId: string) {
 			client.guilds.cache
 				.filter((g) => g.members.cache.has(userId))
 				.map((g) => g.name)
-				.join(', ') || 'None'
+				.join('\n') || 'None'
 		)
 		.addField('Created At', `<t:${Math.round((user.createdTimestamp || 0) / 1000)}:T>`);
 }
@@ -132,8 +132,8 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 		.setColor('BLUE')
 		.addField('Nickname', member.nickname || 'None')
 		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:T>`)
-		.addField('Roles', member.roles.cache.map((r) => r.name).join(', ') || 'None')
-		.addField('Permissions', member.permissions.toArray().join(', ') || 'None');
+		.addField('Roles', member.roles.cache.map((r) => r.name).join('\n') || 'None')
+		.addField('Permissions', member.permissions.toArray().join('\n') || 'None');
 }
 
 export function devCommandsInit(client: Client) {
