@@ -108,13 +108,15 @@ function getServerEmbed(client: Client, guildId: string) {
 				.sort((a, b) => (a as GuildChannel).position - (b as GuildChannel).position)
 				.map(
 					(c) =>
+						(c.parent ? ' ' : '') +
 						(c.isText()
 							? '📄'
 							: c.isVoice()
 							? '🔊'
 							: c.type === 'GUILD_CATEGORY'
 							? '📁'
-							: '📝') + ` ${c.name} (${c.id})`
+							: '📝') +
+						` ${c.name} (${c.id})`
 				)
 				.join('\n') || 'None'
 		);
