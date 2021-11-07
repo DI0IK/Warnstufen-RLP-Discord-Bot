@@ -5,6 +5,7 @@ import deploy from './deploy.js';
 import Data from './data.js';
 import { createGraph } from './graph.js';
 import { startWebDashboard } from './web-dashboard.js';
+import { webhookClientInit } from './webhook.js';
 dotenv.config();
 
 const client = new Discord.Client({
@@ -19,6 +20,8 @@ client.on('ready', () => {
 	deploy(client);
 
 	startWebDashboard(client);
+
+	webhookClientInit(client);
 });
 
 client.login(process.env.DISCORD_TOKEN);
