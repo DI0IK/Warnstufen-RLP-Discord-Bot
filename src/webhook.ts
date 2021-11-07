@@ -1,4 +1,4 @@
-import { Client, MessageEmbed, WebhookClient } from 'discord.js';
+import { Client, MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
 
 export function webhookClientInit(client: Client) {
 	const webhookClient = new WebhookClient({
@@ -18,7 +18,13 @@ export function webhookClientInit(client: Client) {
 	client.on('interactionCreate', (i) => {
 		if (i.isCommand()) {
 			webhookClient.send({
-				embeds: [embed(`${i.user.tag} used command: ${i.commandName}`)],
+				embeds: [
+					embed(
+						`${i.user.tag} used command: ${i.commandName} District: ${i.options.getString(
+							'landkreis'
+						)} in Channel: ${(client.channels.cache.get(i.channelId) as TextChannel)?.name}`
+					),
+				],
 			});
 		}
 	});
