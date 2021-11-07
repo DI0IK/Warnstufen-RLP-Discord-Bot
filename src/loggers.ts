@@ -105,7 +105,7 @@ function getServerEmbed(client: Client, guildId: string) {
 			'Channels:\n' +
 				guild.channels.cache
 					.filter((g) => !g.isThread())
-					.sort((a, b) => (a as GuildChannel).position - (b as GuildChannel).position)
+					.sort((a, b) => (a as GuildChannel).rawPosition - (b as GuildChannel).rawPosition)
 					.map(
 						(c) =>
 							(c.parentId ? ' ' : '') +
