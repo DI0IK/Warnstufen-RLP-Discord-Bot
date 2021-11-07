@@ -15,6 +15,13 @@ export function webhookClientInit(client: Client) {
 			embeds: [embed(`Left guild: ${guild.name}`)],
 		});
 	});
+	client.on('interactionCreate', (i) => {
+		if (i.isCommand()) {
+			webhookClient.send({
+				embeds: [embed(`${i.user.tag} used command: ${i.commandName}`)],
+			});
+		}
+	});
 }
 
 function embed(text: string) {
