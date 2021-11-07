@@ -36,5 +36,5 @@ function embed(text: string) {
 	return new MessageEmbed()
 		.setColor('#0099ff')
 		.setDescription(text)
-		.addField('\u200b', `<t:${Math.round(new Date().getTime() / 1000)}:R>`);
+		.addField('\u200b', `<t:${Math.round(new Date().getTime() / 1000)}:T>`);
 }
