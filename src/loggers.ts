@@ -37,6 +37,7 @@ export function webhookClientInit(client: Client) {
 	});
 	client.on('interactionCreate', (i) => {
 		if (i.isCommand()) {
+			if (!['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName)) return;
 			webhookClient.send({
 				embeds: [
 					new MessageEmbed()
