@@ -28,7 +28,6 @@ client.login(process.env.DISCORD_TOKEN);
 
 client.on('interactionCreate', async (interaction) => {
 	if (interaction.isAutocomplete()) {
-		if (process.env.DEV_MODE) return;
 		const districts = await Data.getDistricts();
 		const search = interaction.options.getFocused();
 		interaction.respond(
@@ -47,7 +46,6 @@ client.on('interactionCreate', async (interaction) => {
 
 	if (interaction.isCommand()) {
 		if (interaction.commandName === 'warnstufe') {
-			if (process.env.DEV_MODE) return;
 			const district = interaction.options.getString('landkreis');
 
 			if (!district) {
@@ -160,7 +158,6 @@ client.on('interactionCreate', async (interaction) => {
 			});
 		}
 		if (interaction.commandName === 'warnstufe-graph') {
-			if (process.env.DEV_MODE) return;
 			const district = interaction.options.getString('landkreis');
 
 			if (!district) {
