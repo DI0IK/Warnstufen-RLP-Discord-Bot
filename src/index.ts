@@ -216,7 +216,7 @@ client.on('messageCreate', (message) => {
 		message.channel.send({
 			embeds: [
 				new Discord.MessageEmbed().setDescription(
-					`Bitte nutze [diesen Invite](${process.env.DISCORD_INVITE}) um mich zu nutzen.`
+					`Bitte nutze [diesen Invite](${process.env.DISCORD_INVITE}) um mich einzuladen oder die Slash Befehle zu aktivieren.`
 				),
 			],
 		});
