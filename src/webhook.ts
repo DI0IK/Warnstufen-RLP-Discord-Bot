@@ -20,9 +20,9 @@ export function webhookClientInit(client: Client) {
 			webhookClient.send({
 				embeds: [
 					embed(
-						`${i.user.tag} used command: ${i.commandName} District: ${i.options.getString(
+						`${i.user.tag} used command: ${i.commandName}\nDistrict: ${i.options.getString(
 							'landkreis'
-						)} in Channel: ${(client.channels.cache.get(i.channelId) as TextChannel)?.name}`
+						)}\nChannel: ${(client.channels.cache.get(i.channelId) as TextChannel)?.name}`
 					),
 				],
 			});
@@ -33,6 +33,6 @@ export function webhookClientInit(client: Client) {
 function embed(text: string) {
 	return new MessageEmbed()
 		.setColor('#0099ff')
-		.setTitle(text)
-		.setFooter(`<t:${Math.round(new Date().getTime() / 1000)}:R>`);
+		.setDescription(text)
+		.addField('\u200b', `<t:${Math.round(new Date().getTime() / 1000)}:R>`);
 }
