@@ -213,8 +213,12 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('messageCreate', (message) => {
 	if (message.mentions.members?.some((mem) => mem.id === client.user?.id)) {
-		message.channel.send(
-			`Bitte nutze [diesen Invite](${process.env.DISCORD_INVITE}) um mich zu nutzen.`
-		);
+		message.channel.send({
+			embeds: [
+				new Discord.MessageEmbed().setDescription(
+					`Bitte nutze [diesen Invite](${process.env.DISCORD_INVITE}) um mich zu nutzen.`
+				),
+			],
+		});
 	}
 });
