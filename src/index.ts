@@ -1,18 +1,24 @@
 import Discord from 'discord.js';
 import dotenv from 'dotenv';
+import { AutoPoster } from 'topgg-autoposter';
 import deploy from './deploy.js';
 import Data from './data.js';
 import { createGraph } from './graph.js';
+import { startWebDashboard } from './web-dashboard.js';
 dotenv.config();
 
 const client = new Discord.Client({
-	intents: [],
+	intents: ['GUILDS', 'GUILD_MESSAGES'],
 });
 
 client.on('ready', () => {
 	console.log(`Logged in as ${client.user?.tag}!`);
 
+	client.user?.setActivity('Slash Befehlen', { type: 'LISTENING' });
+
 	deploy(client);
+
+	startWebDashboard(client);
 });
 
 client.login(process.env.DISCORD_TOKEN);
@@ -202,5 +208,13 @@ client.on('interactionCreate', async (interaction) => {
 				files: [image],
 			});
 		}
+	}
+});
+
+client.on('messageCreate', (message) => {
+	if (message.mentions.members?.some((mem) => mem.id === client.user?.id)) {
+		message.channel.send(
+			`Bitte nutze [diesen Invite](${process.env.DISCORD_INVITE}) um mich zu nutzen.`
+		);
 	}
 });
