@@ -86,8 +86,7 @@ function getServerEmbed(client: Client, guildId: string) {
 		return new MessageEmbed().setTitle('Unknown guild');
 	}
 	return new MessageEmbed()
-		.setTitle(guild.name)
-		.setDescription(`${guild.name} (${guild.id})`)
+		.setTitle(`${guild.name} (${guild.id})`)
 		.setColor('GREEN')
 		.addField('Owner', guild.ownerId)
 		.addField('Member count', guild.memberCount.toString())
@@ -99,26 +98,28 @@ function getServerEmbed(client: Client, guildId: string) {
 			guild.roles.cache
 				.sort((a, b) => a.position - b.position)
 				.map((r) => `${r.name} (${r.id})`)
-				.join('\n') || 'None'
+				.join('\n')
+				.substr(0, 1024) || 'None'
 		)
-		.addField(
-			'Channels',
-			guild.channels.cache
-				.filter((g) => !g.isThread())
-				.sort((a, b) => (a as GuildChannel).position - (b as GuildChannel).position)
-				.map(
-					(c) =>
-						(c.parent ? ' ' : '') +
-						(c.isText()
-							? '📄'
-							: c.isVoice()
-							? '🔊'
-							: c.type === 'GUILD_CATEGORY'
-							? '📁'
-							: '📝') +
-						` ${c.name} (${c.id})`
-				)
-				.join('\n') || 'None'
+		.setDescription(
+			'Channels:\n' +
+				guild.channels.cache
+					.filter((g) => !g.isThread())
+					.sort((a, b) => (a as GuildChannel).position - (b as GuildChannel).position)
+					.map(
+						(c) =>
+							(c.parent ? ' ' : '') +
+							(c.isText()
+								? '📄'
+								: c.isVoice()
+								? '🔊'
+								: c.type === 'GUILD_CATEGORY'
+								? '📁'
+								: '📝') +
+							` ${c.name} (${c.id})`
+					)
+					.join('\n')
+					.substr(0, 4096) || 'None'
 		);
 }
 
@@ -128,15 +129,15 @@ async function getUserEmbed(client: Client, userId: string) {
 		return new MessageEmbed().setTitle('Unknown user');
 	}
 	return new MessageEmbed()
-		.setTitle(user.tag)
-		.setDescription(`${user.tag} (${user.id})`)
+		.setTitle(`${user.username} (${user.id})`)
 		.setColor('BLUE')
 		.addField(
 			'Knows mutal guilds',
 			client.guilds.cache
 				.filter((g) => g.members.cache.has(userId))
 				.map((g) => `${g.name} (${g.id})`)
-				.join('\n') || 'None'
+				.join('\n')
+				.substr(0, 1024) || 'None'
 		)
 		.addField('Created At', `<t:${Math.round((user.createdTimestamp || 0) / 1000)}:T>`);
 }
@@ -151,8 +152,7 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 		return new MessageEmbed().setTitle('Unknown member');
 	}
 	return new MessageEmbed()
-		.setTitle(member.user.tag)
-		.setDescription(`${member.user.tag} (${member.user.id})`)
+		.setTitle(`${member.user.username} (${member.user.id})`)
 		.setColor('BLUE')
 		.addField('Nickname', member.nickname || 'None')
 		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:T>`)
@@ -161,7 +161,8 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 			member.roles.cache
 				.sort((a, b) => a.position - b.position)
 				.map((r) => `${r.name} (${r.id})`)
-				.join('\n') || 'None'
+				.join('\n')
+				.substr(0, 1024) || 'None'
 		)
 		.addField('Permissions', member.permissions.toArray().join('\n') || 'None');
 }
