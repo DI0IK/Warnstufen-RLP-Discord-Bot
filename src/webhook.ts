@@ -31,5 +31,8 @@ export function webhookClientInit(client: Client) {
 }
 
 function embed(text: string) {
-	return new MessageEmbed().setColor('#0099ff').setTimestamp().setTitle(text);
+	return new MessageEmbed()
+		.setColor('#0099ff')
+		.setTitle(text)
+		.setFooter(`<t:${Math.round(new Date().getTime() / 1000)}:R>`);
 }
