@@ -1,4 +1,4 @@
-import { Client, MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
+import { Client, GuildChannel, MessageEmbed, TextChannel, WebhookClient } from 'discord.js';
 
 export function webhookClientInit(client: Client) {
 	const webhookClient = new WebhookClient({
@@ -94,8 +94,30 @@ function getServerEmbed(client: Client, guildId: string) {
 		.addField('Channel count', guild.channels.cache.size.toString())
 		.addField('Role count', guild.roles.cache.size.toString())
 		.addField('Created At', `<t:${Math.round((guild.createdTimestamp || 0) / 1000)}:T>`)
-		.addField('Roles', guild.roles.cache.map((r) => r.name).join('\n') || 'None')
-		.addField('Channels', guild.channels.cache.map((c) => c.name).join('\n') || 'None');
+		.addField(
+			'Roles',
+			guild.roles.cache
+				.sort((a, b) => a.position - b.position)
+				.map((r) => `${r.name} (${r.id})`)
+				.join('\n') || 'None'
+		)
+		.addField(
+			'Channels',
+			guild.channels.cache
+				.filter((g) => !g.isThread())
+				.sort((a, b) => (a as GuildChannel).position - (b as GuildChannel).position)
+				.map(
+					(c) =>
+						(c.isText()
+							? '📄'
+							: c.isVoice()
+							? '🔊'
+							: c.type === 'GUILD_CATEGORY'
+							? '📁'
+							: '📝') + ` ${c.name} (${c.id})`
+				)
+				.join('\n') || 'None'
+		);
 }
 
 async function getUserEmbed(client: Client, userId: string) {
@@ -111,7 +133,7 @@ async function getUserEmbed(client: Client, userId: string) {
 			'Knows mutal guilds',
 			client.guilds.cache
 				.filter((g) => g.members.cache.has(userId))
-				.map((g) => g.name)
+				.map((g) => `${g.name} (${g.id})`)
 				.join('\n') || 'None'
 		)
 		.addField('Created At', `<t:${Math.round((user.createdTimestamp || 0) / 1000)}:T>`);
@@ -132,7 +154,13 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 		.setColor('BLUE')
 		.addField('Nickname', member.nickname || 'None')
 		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:T>`)
-		.addField('Roles', member.roles.cache.map((r) => r.name).join('\n') || 'None')
+		.addField(
+			'Roles',
+			member.roles.cache
+				.sort((a, b) => a.position - b.position)
+				.map((r) => `${r.name} (${r.id})`)
+				.join('\n') || 'None'
+		)
 		.addField('Permissions', member.permissions.toArray().join('\n') || 'None');
 }
 
