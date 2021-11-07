@@ -7,7 +7,7 @@ export function webhookClientInit(client: Client) {
 
 	client.on('guildCreate', (guild) => {
 		webhookClient.send({
-			embeds: [embed(`Joined new guild: ${guild.name}`)],
+			embeds: [embed(`Joined guild: ${guild.name}`)],
 		});
 	});
 	client.on('guildDelete', (guild) => {
@@ -20,9 +20,11 @@ export function webhookClientInit(client: Client) {
 			webhookClient.send({
 				embeds: [
 					embed(
-						`${i.user.tag} used command: ${i.commandName}\nDistrict: ${i.options.getString(
-							'landkreis'
-						)}\nChannel: ${(client.channels.cache.get(i.channelId) as TextChannel)?.name}`
+						`${i.user.tag} ran a Command\nCommand: ${
+							i.commandName
+						}\nDistrict: ${i.options.getString('landkreis')}\nChannel: ${
+							(client.channels.cache.get(i.channelId) as TextChannel)?.name
+						}`
 					),
 				],
 			});
