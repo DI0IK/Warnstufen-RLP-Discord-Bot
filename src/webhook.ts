@@ -15,19 +15,6 @@ export function webhookClientInit(client: Client) {
 			embeds: [embed(`Left guild: ${guild.name}`)],
 		});
 	});
-
-	client.on('messageCreate', (message) => {
-		if (message.author.bot) return;
-		if (message.channel.type === 'DM') return;
-		if (message.webhookId) return;
-		webhookClient.send({
-			embeds: [
-				embed(
-					`${message.author.username}#${message.author.discriminator} in ${message.channel.name}: ${message.content}`
-				),
-			],
-		});
-	});
 }
 
 function embed(text: string) {
