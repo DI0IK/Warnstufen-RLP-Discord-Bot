@@ -4,8 +4,7 @@ import { AutoPoster } from 'topgg-autoposter';
 import deploy from './deploy.js';
 import Data from './data.js';
 import { createGraph } from './graph.js';
-import { startWebDashboard } from './web-dashboard.js';
-import { webhookClientInit } from './webhook.js';
+import { devCommandsInit, webhookClientInit } from './loggers.js';
 dotenv.config();
 
 const client = new Discord.Client({
@@ -19,15 +18,18 @@ client.on('ready', () => {
 
 	deploy(client);
 
-	startWebDashboard(client);
-
 	webhookClientInit(client);
+
+	devCommandsInit(client);
+
+	AutoPoster(process.env.TOPGG_TOKEN as string, client);
 });
 
 client.login(process.env.DISCORD_TOKEN);
 
 client.on('interactionCreate', async (interaction) => {
 	if (interaction.isAutocomplete()) {
+		if (!['warnstufe', 'warnstufe-graph'].includes(interaction.commandName)) return;
 		const districts = await Data.getDistricts();
 		const search = interaction.options.getFocused();
 		interaction.respond(

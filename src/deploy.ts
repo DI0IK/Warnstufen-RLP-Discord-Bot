@@ -1,13 +1,10 @@
 import { ApplicationCommandData, Client } from 'discord.js';
-import Data from './data.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 
 export default async function deploy(client: Client) {
 	if (!process.env.DISCORD_TOKEN) throw new Error('DISCORD_TOKEN is not set');
 	if (!process.env.DISCORD_CLIENT_ID) throw new Error('DISCORD_CLIENT_ID is not set');
-
-	const districts = await Data.getDistricts();
 
 	const Rest = new REST({
 		version: '9',
@@ -118,6 +115,61 @@ export default async function deploy(client: Client) {
 		},
 	];
 
+	const devCommands: ApplicationCommandData[] = [
+		{
+			name: 'user-info',
+			description: 'Informationen zu einem Nutzer abfragen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'user',
+					description: 'Nutzer',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
+		{
+			name: 'guild-info',
+			description: 'Informationen zu einem Server abfragen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'guild',
+					description: 'Server',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
+		{
+			name: 'guild-member-info',
+			description: 'Informationen zu einem Servermitglied abfragen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'guild',
+					description: 'Server',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+				{
+					name: 'user',
+					description: 'Benutzer',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
+	];
+
 	await Rest.put(Routes.applicationCommands(client.user!.id || process.env.DISCORD_CLIENT_ID), {
 		body: Commands,
 	});
@@ -128,7 +180,7 @@ export default async function deploy(client: Client) {
 			'714890515539165304'
 		),
 		{
-			body: Commands,
+			body: devCommands,
 		}
 	);
 
