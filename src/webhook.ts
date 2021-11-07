@@ -24,7 +24,9 @@ export function webhookClientInit(client: Client) {
 							i.commandName
 						}\nDistrict: ${i.options.getString('landkreis')}\nChannel: ${
 							(client.channels.cache.get(i.channelId) as TextChannel)?.name
-						} (${i.channelId})`
+						} (${i.channelId})\nGuild: ${
+							(client.guilds.cache.get(i.guildId))?.name
+						} (${i.guildId})`
 					),
 				],
 			});
