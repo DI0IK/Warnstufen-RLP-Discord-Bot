@@ -89,6 +89,47 @@ function getServerEmbed(client: Client, guildId: string) {
 	if (!guild) {
 		return new MessageEmbed().setTitle('Unknown guild');
 	}
+	const channels: {
+		[parentId: string]: GuildChannel[];
+		parents: GuildChannel[];
+	} = {
+		parents: [],
+	};
+
+	guild.channels.cache
+		.filter((g) => !g.isThread())
+		.sort((a, b) => {
+			return (a as GuildChannel).position - (b as GuildChannel).position;
+		})
+		.forEach((channel) => {
+			if (channel instanceof GuildChannel) {
+				if (channel.parentId != null) {
+					if (!channels[channel.parentId]) {
+						channels[channel.parentId] = [];
+					}
+					channels[channel.parentId].push(channel);
+				} else {
+					channels.parents.push(channel);
+				}
+			}
+		});
+
+	let channelsString = '';
+	for (const parent of channels.parents) {
+		channelsString += `${parent.name} (${parent.id})\n`;
+		for (const channel of channels[parent.id]) {
+			channelsString += `\t${
+				channel.type === 'GUILD_TEXT'
+					? '📄'
+					: channel.type === 'GUILD_VOICE'
+					? '🔊'
+					: channel.type === 'GUILD_NEWS'
+					? '📰'
+					: '🛑'
+			} ${channel.name} (${channel.id})\n`;
+		}
+	}
+
 	return new MessageEmbed()
 		.setTitle(`${guild.name} (${guild.id})`)
 		.setColor('GREEN')
@@ -105,26 +146,7 @@ function getServerEmbed(client: Client, guildId: string) {
 				.join('\n')
 				.substr(0, 1024) || 'None'
 		)
-		.setDescription(
-			'Channels:\n' +
-				guild.channels.cache
-					.filter((g) => !g.isThread())
-					.sort((a, b) => (a as GuildChannel).rawPosition - (b as GuildChannel).rawPosition)
-					.map(
-						(c) =>
-							(c.parentId ? ' ' : '') +
-							(c.isText()
-								? '📄'
-								: c.isVoice()
-								? '🔊'
-								: c.type === 'GUILD_CATEGORY'
-								? '📁'
-								: '📝') +
-							` ${c.name} (${c.id})`
-					)
-					.join('\n')
-					.substr(0, 4096) || 'None'
-		);
+		.setDescription('Channels:\n' + channelsString.substr(0, 4096) || 'None');
 }
 
 async function getUserEmbed(client: Client, userId: string) {
