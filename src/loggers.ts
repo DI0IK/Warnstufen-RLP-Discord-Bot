@@ -91,9 +91,9 @@ function getServerEmbed(client: Client, guildId: string) {
 	}
 	const channels: {
 		[parentId: string]: GuildChannel[];
-		parents: GuildChannel[];
+		allTopLevel: GuildChannel[];
 	} = {
-		parents: [],
+		allTopLevel: [],
 	};
 
 	guild.channels.cache
@@ -108,25 +108,39 @@ function getServerEmbed(client: Client, guildId: string) {
 						channels[channel.parentId] = [];
 					}
 					channels[channel.parentId].push(channel);
+				} else if (channel.type === 'GUILD_CATEGORY') {
+					channels.allTopLevel.push(channel);
 				} else {
-					channels.parents.push(channel);
+					channels.allTopLevel.push(channel);
 				}
 			}
 		});
 
 	let channelsString = '';
-	for (const parent of channels.parents) {
-		channelsString += `${parent.name} (${parent.id})\n`;
-		for (const channel of channels[parent.id] || []) {
-			channelsString += `\t${
-				channel.type === 'GUILD_TEXT'
+	for (const parent of channels.allTopLevel) {
+		if (parent.type === 'GUILD_CATEGORY') {
+			channelsString += `📂 ${parent.name} (${parent.id})\n`;
+			for (const channel of channels[parent.id] || []) {
+				channelsString += `\t${
+					channel.type === 'GUILD_TEXT'
+						? '📄'
+						: channel.type === 'GUILD_VOICE'
+						? '🔊'
+						: channel.type === 'GUILD_NEWS'
+						? '📰'
+						: '🛑'
+				} ${channel.name} (${channel.id})\n`;
+			}
+		} else {
+			channelsString += `${
+				parent.type === 'GUILD_TEXT'
 					? '📄'
-					: channel.type === 'GUILD_VOICE'
+					: parent.type === 'GUILD_VOICE'
 					? '🔊'
-					: channel.type === 'GUILD_NEWS'
+					: parent.type === 'GUILD_NEWS'
 					? '📰'
 					: '🛑'
-			} ${channel.name} (${channel.id})\n`;
+			} ${parent.name} (${parent.id})\n`;
 		}
 	}
 
