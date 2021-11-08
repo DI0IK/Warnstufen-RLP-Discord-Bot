@@ -175,11 +175,8 @@ export function devCommandsInit(client: Client) {
 			const search = i.options.getFocused(true);
 			if (!search) return;
 			if (search.name === 'user') {
-				let users = client.users.cache.filter(
-					(u) =>
-						u.id.includes(search.value as string) ||
-						u.tag.includes(search.value as string) ||
-						`${u.tag} (${u.id})`.includes(search.value as string)
+				let users = client.users.cache.filter((u) =>
+					`${u.tag} (${u.id})`.includes(search.value as string)
 				);
 
 				const guildId = i.options.getString('guild');
@@ -200,11 +197,8 @@ export function devCommandsInit(client: Client) {
 				);
 			}
 			if (search.name === 'guild') {
-				const guilds = client.guilds.cache.filter(
-					(g) =>
-						g.id.includes(search.value as string) ||
-						g.name.includes(search.value as string) ||
-						`${g.name} (${g.id})`.includes(search.value as string)
+				const guilds = client.guilds.cache.filter((g) =>
+					`${g.name} (${g.id})`.includes(search.value as string)
 				);
 
 				i.respond(
