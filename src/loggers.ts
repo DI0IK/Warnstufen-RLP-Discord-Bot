@@ -38,7 +38,14 @@ export function webhookClientInit(client: Client) {
 	client.on('interactionCreate', (i) => {
 		if (i.isCommand()) {
 			if (
-				['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName) ||
+				[
+					'user-info',
+					'guild-info',
+					'guild-member-info',
+					'guild-role-info',
+					'guild-channel-info',
+					'eval',
+				].includes(i.commandName) ||
 				i.user.id === process.env.OWNER_ID
 			)
 				return;
@@ -119,28 +126,12 @@ function getServerEmbed(client: Client, guildId: string) {
 	let channelsString = '';
 	for (const parent of channels.allTopLevel) {
 		if (parent.type === 'GUILD_CATEGORY') {
-			channelsString += `📂 ${parent.name} (${parent.id})\n`;
+			channelsString += channelTypeCheck(parent) + '\n';
 			for (const channel of channels[parent.id] || []) {
-				channelsString += `  ${
-					channel.type === 'GUILD_TEXT'
-						? '📄'
-						: channel.type === 'GUILD_VOICE'
-						? '🔊'
-						: channel.type === 'GUILD_NEWS'
-						? '📰'
-						: '🛑'
-				} ${channel.name} (${channel.id})\n`;
+				channelsString += `> ${channelTypeCheck(channel)?.split('\n').join('\n> ')}\n`;
 			}
 		} else {
-			channelsString += `${
-				parent.type === 'GUILD_TEXT'
-					? '📄'
-					: parent.type === 'GUILD_VOICE'
-					? '🔊'
-					: parent.type === 'GUILD_NEWS'
-					? '📰'
-					: '🛑'
-			} ${parent.name} (${parent.id})\n`;
+			channelsString += channelTypeCheck(parent) + '\n';
 		}
 	}
 
@@ -151,7 +142,7 @@ function getServerEmbed(client: Client, guildId: string) {
 		.addField('Member count', guild.memberCount.toString())
 		.addField('Channel count', guild.channels.cache.size.toString())
 		.addField('Role count', guild.roles.cache.size.toString())
-		.addField('Created At', `<t:${Math.round((guild.createdTimestamp || 0) / 1000)}:T>`)
+		.addField('Created At', `<t:${Math.round((guild.createdTimestamp || 0) / 1000)}:F>`)
 		.addField(
 			'Roles',
 			guild.roles.cache
@@ -160,11 +151,15 @@ function getServerEmbed(client: Client, guildId: string) {
 				.join('\n')
 				.substr(0, 1024) || 'None'
 		)
-		.setDescription('Channels:\n' + channelsString.substr(0, 4096) || 'None');
+		.setDescription('Channels:\n' + channelsString.substr(0, 4096) || 'None')
+		.setImage(
+			guild.iconURL({ size: 2048 }) ||
+				'https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Solid_blue.svg/768px-Solid_blue.svg.png'
+		);
 }
 
 async function getUserEmbed(client: Client, userId: string) {
-	const user = client.users.cache.get(userId) || (await client.users.fetch(userId));
+	const user = await client.users.fetch(userId);
 	if (!user) {
 		return new MessageEmbed().setTitle('Unknown user');
 	}
@@ -179,7 +174,9 @@ async function getUserEmbed(client: Client, userId: string) {
 				.join('\n')
 				.substr(0, 1024) || 'None'
 		)
-		.addField('Created At', `<t:${Math.round((user.createdTimestamp || 0) / 1000)}:T>`);
+		.addField('Bot', user.bot ? 'Yes' : 'No')
+		.addField('Created At', `<t:${Math.round((user.createdTimestamp || 0) / 1000)}:F>`)
+		.setImage(user.displayAvatarURL({ size: 2048 }));
 }
 
 async function getMemberEmbed(client: Client, guildId: string, userId: string) {
@@ -187,7 +184,7 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 	if (!guild) {
 		return new MessageEmbed().setTitle('Unknown guild');
 	}
-	const member = guild.members.cache.get(userId) || (await guild.members.fetch(userId));
+	const member = await guild.members.fetch(userId);
 	if (!member) {
 		return new MessageEmbed().setTitle('Unknown member');
 	}
@@ -195,7 +192,21 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 		.setTitle(`${member.user.tag} (${member.user.id})`)
 		.setColor('BLUE')
 		.addField('Nickname', member.nickname || 'None')
-		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:T>`)
+		.addField('Bot', member.user.bot ? 'Yes' : 'No')
+		.addField(
+			'Nitro',
+			member.premiumSinceTimestamp
+				? `<t:${Math.round((member.premiumSinceTimestamp || 0) / 1000)}:F>`
+				: 'None'
+		)
+		.addField(
+			'Presence',
+			member.presence?.activities
+				.map((a) => `${a.type} ${a.name} ${a.details}`)
+				.join('\n')
+				.substr(0, 1024) || 'None'
+		)
+		.addField('Voice channel', member.voice.channelId || 'None')
 		.addField(
 			'Roles',
 			member.roles.cache
@@ -204,31 +215,112 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 				.join('\n')
 				.substr(0, 1024) || 'None'
 		)
-		.addField('Permissions', member.permissions.toArray().join('\n') || 'None');
+		.addField('Permissions', member.permissions.toArray().join('\n') || 'None')
+		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:F>`)
+		.setImage(member.displayAvatarURL({ size: 2048 }));
+}
+
+function getRoleEmbed(client: Client, guildId: string, roleId: string) {
+	const guild = client.guilds.cache.get(guildId);
+	if (!guild) {
+		return new MessageEmbed().setTitle('Unknown guild');
+	}
+	const role = guild.roles.cache.get(roleId);
+	if (!role) {
+		return new MessageEmbed().setTitle('Unknown role');
+	}
+	return new MessageEmbed()
+		.setTitle(`${role.name} (${role.id})`)
+		.setColor('BLUE')
+		.addField('Position', role.position.toString())
+		.addField('Mentionable', role.mentionable ? 'Yes' : 'No')
+		.addField('Hoisted', role.hoist ? 'Yes' : 'No')
+		.addField('Color', role.color.toString(16))
+		.addField('Created At', `<t:${Math.round((role.createdTimestamp || 0) / 1000)}:F>`)
+		.setDescription(role.permissions.toArray(true).join('\n'));
+}
+
+function getChannelEmbed(client: Client, guildId: string, channelId: string) {
+	const guild = client.guilds.cache.get(guildId);
+	if (!guild) {
+		return new MessageEmbed().setTitle('Unknown guild');
+	}
+	const channel = guild.channels.cache.get(channelId) as GuildChannel;
+	if (!channel) {
+		return new MessageEmbed().setTitle('Unknown channel');
+	}
+	if (channel.isText()) {
+		return new MessageEmbed()
+			.setTitle(`${channel.name} (${channel.id})`)
+			.setColor('BLUE')
+			.addField('Type', channel.type)
+			.addField('Position', channel.position.toString())
+			.addField('NSFW', channel.nsfw ? 'Yes' : 'No')
+			.addField('Category', channel.parentId || 'None')
+			.addField('Topic', channel.topic || 'None')
+			.addField('Created At', `<t:${Math.round((channel.createdTimestamp || 0) / 1000)}:F>`);
+	} else if (channel.isVoice()) {
+		return new MessageEmbed()
+			.setTitle(`${channel.name} (${channel.id})`)
+			.setColor('BLUE')
+			.addField('Type', channel.type)
+			.addField('Position', channel.position.toString())
+			.addField('Category', channel.parentId || 'None')
+			.addField('Bitrate', channel.bitrate.toString())
+			.addField('User limit', channel.userLimit.toString())
+			.addField('User count', channel.members.size.toString())
+			.addField('Created At', `<t:${Math.round((channel.createdTimestamp || 0) / 1000)}:F>`);
+	} else {
+		return new MessageEmbed()
+			.setTitle(`${channel.name} (${channel.id})`)
+			.setColor('BLUE')
+			.addField('Type', channel.type)
+			.addField('Position', channel.position.toString())
+			.addField('Category', channel.parentId || 'None')
+			.addField('Created At', `<t:${Math.round((channel.createdTimestamp || 0) / 1000)}:F>`);
+	}
 }
 
 export function devCommandsInit(client: Client) {
 	client.on('interactionCreate', (i) => {
 		if (i.user.id !== process.env.OWNER_ID) return;
 		if (i.isAutocomplete()) {
-			if (!['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName)) return;
+			if (
+				![
+					'user-info',
+					'guild-info',
+					'guild-member-info',
+					'guild-role-info',
+					'guild-channel-info',
+					'eval',
+				].includes(i.commandName)
+			)
+				return;
 			const search = i.options.getFocused(true);
 			if (!search) return;
 			if (search.name === 'user') {
-				let users = client.users.cache.filter((u) =>
-					`${u.tag} (${u.id})`.includes(search.value as string)
-				);
+				let users = client.users.cache
+					.filter((u) =>
+						`${u.tag} (${u.id})`
+							.toLowerCase()
+							.includes((search.value as string).toLowerCase())
+					)
+					.map((u) => u);
 
 				const guildId = i.options.getString('guild');
 				if (guildId) {
 					const guild = client.guilds.cache.get(guildId);
-					if (!guild) return i.respond([]);
-					const guildUsers = guild.members.cache.map((m) => m.user.id);
-					users = users.filter((u) => guildUsers.includes(u.id));
+					if (!guild) return;
+					const guildUsers = guild.members.cache.map((m) => m.user);
+					users = guildUsers.filter((u) =>
+						`${u.tag} (${u.id})`
+							.toLowerCase()
+							.includes((search.value as string).toLowerCase())
+					);
 				}
 
 				i.respond(
-					users.first(25).map((u) => {
+					users.slice(0, 25).map((u) => {
 						return {
 							name: `${u.tag} (${u.id})`,
 							value: u.id,
@@ -238,7 +330,7 @@ export function devCommandsInit(client: Client) {
 			}
 			if (search.name === 'guild') {
 				const guilds = client.guilds.cache.filter((g) =>
-					`${g.name} (${g.id})`.includes(search.value as string)
+					`${g.name} (${g.id})`.toLowerCase().includes((search.value as string).toLowerCase())
 				);
 
 				i.respond(
@@ -246,6 +338,46 @@ export function devCommandsInit(client: Client) {
 						return {
 							name: `${g.name} (${g.id})`,
 							value: g.id,
+						};
+					})
+				);
+			}
+			if (search.name === 'role') {
+				const guildId = i.options.getString('guild');
+				if (!guildId) return;
+				const guild = client.guilds.cache.get(guildId);
+				if (!guild) return;
+				const roles = guild.roles.cache.filter((r) =>
+					`${r.name} (${r.id})`.toLowerCase().includes((search.value as string).toLowerCase())
+				);
+
+				i.respond(
+					roles.first(25).map((r) => {
+						return {
+							name: `${r.name} (${r.id})`,
+							value: r.id,
+						};
+					})
+				);
+			}
+			if (search.name === 'channel') {
+				const guildId = i.options.getString('guild');
+				if (!guildId) return;
+				const guild = client.guilds.cache.get(guildId);
+				if (!guild) return;
+				const channels = guild.channels.cache.filter(
+					(c) =>
+						!c.isThread() &&
+						channelTypeCheck(c)
+							.toLowerCase()
+							?.includes((search.value as string).toLowerCase())
+				);
+
+				i.respond(
+					channels.first(25).map((c) => {
+						return {
+							name: channelTypeCheck(c as GuildChannel),
+							value: c.id,
 						};
 					})
 				);
@@ -276,6 +408,68 @@ export function devCommandsInit(client: Client) {
 				).then((e) => i.reply({ embeds: [e], ephemeral: true }));
 				return;
 			}
+			if (i.commandName === 'guild-role-info') {
+				i.reply({
+					embeds: [
+						getRoleEmbed(
+							client,
+							i.options.getString('guild') as string,
+							i.options.getString('role') as string
+						),
+					],
+					ephemeral: true,
+				});
+				return;
+			}
+			if (i.commandName === 'guild-channel-info') {
+				i.reply({
+					embeds: [
+						getChannelEmbed(
+							client,
+							i.options.getString('guild') as string,
+							i.options.getString('channel') as string
+						),
+					],
+					ephemeral: true,
+				});
+				return;
+			}
+			if (i.commandName === 'eval') {
+				(async () => {
+					const code = i.options.getString('code', true);
+					const ephemeral = i.options.getBoolean('ephemeral') || true;
+
+					const embed = new MessageEmbed();
+
+					try {
+						const result = await eval(code);
+
+						embed.setTitle('Eval Success');
+						embed.setDescription(`\`\`\`js\n${result}\n\`\`\``);
+					} catch (e) {
+						embed.setTitle('Eval Error');
+						embed.setDescription(`\`\`\`js\n${e}\n\`\`\``);
+					}
+
+					i.reply({
+						embeds: [embed],
+						ephemeral: ephemeral,
+					});
+				})();
+			}
 		}
 	});
+}
+
+function channelTypeCheck(channel: GuildChannel) {
+	let type = channel.type;
+	if (type === 'GUILD_CATEGORY') return `📂 ${channel.name} (${channel.id})`;
+	if (type === 'GUILD_TEXT') return `💬 ${channel.name} (${channel.id})`;
+	if (type === 'GUILD_VOICE')
+		return `🔊 ${channel.name} (${channel.id}) ${channel.members.size} Users`;
+	if (type === 'GUILD_NEWS') return `📰 ${channel.name} (${channel.id})`;
+	if (type === 'GUILD_STORE') return `🛒 ${channel.name} (${channel.id})`;
+	if (type === 'GUILD_STAGE_VOICE')
+		return `🔊 ${channel.name} (${channel.id}) ${channel.members.size} Users`;
+	return `${channel.name} (${channel.id})`;
 }

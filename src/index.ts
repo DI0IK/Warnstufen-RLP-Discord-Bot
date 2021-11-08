@@ -34,7 +34,7 @@ client.on('interactionCreate', async (interaction) => {
 		const search = interaction.options.getFocused();
 		interaction.respond(
 			districts
-				.filter((d) => d.includes(search as string))
+				.filter((d) => d.toLowerCase().includes((search as string).toLowerCase()))
 				.slice(0, 25)
 				.map((district) => {
 					return {

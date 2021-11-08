@@ -113,6 +113,28 @@ export default async function deploy(client: Client) {
 				},
 			],
 		},
+		{
+			name: 'eval',
+			description: 'Einen Code ausführen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'code',
+					description: 'Code',
+					type: 3,
+					autocomplete: false,
+					required: true,
+				},
+				{
+					name: 'ephemeral',
+					description: 'Ephemeral',
+					type: 4,
+					autocomplete: false,
+					required: false,
+				},
+			],
+		},
 	];
 
 	const devCommands: ApplicationCommandData[] = [
@@ -162,6 +184,50 @@ export default async function deploy(client: Client) {
 				{
 					name: 'user',
 					description: 'Benutzer',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
+		{
+			name: 'guild-channel-info',
+			description: 'Informationen zu einem Serverkanal abfragen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'guild',
+					description: 'Server',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+				{
+					name: 'channel',
+					description: 'Kanal',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+			],
+		},
+		{
+			name: 'guild-role-info',
+			description: 'Informationen zu einer Serverrolle abfragen',
+			defaultPermission: true,
+			type: 1,
+			options: [
+				{
+					name: 'guild',
+					description: 'Server',
+					type: 3,
+					autocomplete: true,
+					required: true,
+				},
+				{
+					name: 'role',
+					description: 'Rolle',
 					type: 3,
 					autocomplete: true,
 					required: true,
