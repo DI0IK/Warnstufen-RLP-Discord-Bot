@@ -117,7 +117,7 @@ function getServerEmbed(client: Client, guildId: string) {
 	let channelsString = '';
 	for (const parent of channels.parents) {
 		channelsString += `${parent.name} (${parent.id})\n`;
-		for (const channel of channels[parent.id]) {
+		for (const channel of channels[parent.id] || []) {
 			channelsString += `\t${
 				channel.type === 'GUILD_TEXT'
 					? '📄'
