@@ -129,7 +129,7 @@ async function getUserEmbed(client: Client, userId: string) {
 		return new MessageEmbed().setTitle('Unknown user');
 	}
 	return new MessageEmbed()
-		.setTitle(`${user.username} (${user.id})`)
+		.setTitle(`${user.tag} (${user.id})`)
 		.setColor('BLUE')
 		.addField(
 			'Knows mutal guilds',
@@ -152,7 +152,7 @@ async function getMemberEmbed(client: Client, guildId: string, userId: string) {
 		return new MessageEmbed().setTitle('Unknown member');
 	}
 	return new MessageEmbed()
-		.setTitle(`${member.user.username} (${member.user.id})`)
+		.setTitle(`${member.user.tag} (${member.user.id})`)
 		.setColor('BLUE')
 		.addField('Nickname', member.nickname || 'None')
 		.addField('Joined At', `<t:${Math.round((member.joinedTimestamp || 0) / 1000)}:T>`)
@@ -175,13 +175,23 @@ export function devCommandsInit(client: Client) {
 			const search = i.options.getFocused(true);
 			if (!search) return;
 			if (search.name === 'user') {
-				const users = client.users.cache.filter(
+				let users = client.users.cache.filter(
 					(u) =>
-						u.id.includes(search.value as string) || u.tag.includes(search.value as string)
+						u.id.includes(search.value as string) ||
+						u.tag.includes(search.value as string) ||
+						`${u.tag} (${u.id})`.includes(search.value as string)
 				);
 
+				const guildId = i.options.getString('guild');
+				if (guildId) {
+					const guild = client.guilds.cache.get(guildId);
+					if (!guild) return i.respond([]);
+					const guildUsers = guild.members.cache.map((m) => m.user.id);
+					users = users.filter((u) => guildUsers.includes(u.id));
+				}
+
 				i.respond(
-					users.map((u) => {
+					users.first(25).map((u) => {
 						return {
 							name: `${u.tag} (${u.id})`,
 							value: u.id,
@@ -192,11 +202,13 @@ export function devCommandsInit(client: Client) {
 			if (search.name === 'guild') {
 				const guilds = client.guilds.cache.filter(
 					(g) =>
-						g.id.includes(search.value as string) || g.name.includes(search.value as string)
+						g.id.includes(search.value as string) ||
+						g.name.includes(search.value as string) ||
+						`${g.name} (${g.id})`.includes(search.value as string)
 				);
 
 				i.respond(
-					guilds.map((g) => {
+					guilds.first(25).map((g) => {
 						return {
 							name: `${g.name} (${g.id})`,
 							value: g.id,
