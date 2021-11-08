@@ -382,6 +382,67 @@ export function devCommandsInit(client: Client) {
 					})
 				);
 			}
+			if (search.name === 'code') {
+				const code = search.value as string;
+				const autocomplete = i.options.getBoolean('autocomplete', true);
+				if (!autocomplete)
+					return i.respond([
+						{
+							name: code || '---',
+							value: code || '---',
+						},
+					]);
+
+				let props = code.split('.');
+				if (props.length < 1)
+					return i.respond([
+						{
+							name: code || '---',
+							value: code || '---',
+						},
+					]);
+
+				let searched = props.pop() || '';
+
+				try {
+					let obj = eval(props.join('.'));
+					if (!obj)
+						return i.respond([
+							{
+								name: code || '---',
+								value: code || '---',
+							},
+						]);
+					const preSearchString = code.substring(0, code.lastIndexOf('.'));
+					i.respond(
+						[
+							...Object.getOwnPropertyNames(obj)
+								.filter((k) => k.toLowerCase().includes(searched.toLowerCase()))
+								.map((k) => {
+									return {
+										name: `${preSearchString}.${k}`,
+										value: `${preSearchString}.${k}`,
+									};
+								}),
+							...Object.getOwnPropertyNames(Object.getPrototypeOf(obj))
+								.filter((k) => k.toLowerCase().includes(searched.toLowerCase()))
+								.map((k) => {
+									return {
+										name: `${preSearchString}.${k}`,
+										value: `${preSearchString}.${k}`,
+									};
+								}),
+						].slice(0, 25)
+					);
+				} catch (e) {
+					i.respond([
+						{
+							name: code || '---',
+							value: code || '---',
+						},
+					]);
+				}
+			}
 		}
 		if (i.isCommand()) {
 			if (i.commandName === 'user-info') {

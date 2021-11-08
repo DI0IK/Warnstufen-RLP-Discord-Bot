@@ -120,16 +120,23 @@ export default async function deploy(client: Client) {
 			type: 1,
 			options: [
 				{
+					name: 'autocomplete',
+					description: 'Autocomplete',
+					type: 5,
+					required: true,
+					autocomplete: false,
+				},
+				{
 					name: 'code',
 					description: 'Code',
 					type: 3,
-					autocomplete: false,
+					autocomplete: true,
 					required: true,
 				},
 				{
 					name: 'ephemeral',
 					description: 'Ephemeral',
-					type: 4,
+					type: 5,
 					autocomplete: false,
 					required: false,
 				},
