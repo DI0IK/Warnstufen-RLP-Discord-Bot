@@ -37,7 +37,11 @@ export function webhookClientInit(client: Client) {
 	});
 	client.on('interactionCreate', (i) => {
 		if (i.isCommand()) {
-			if (['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName)) return;
+			if (
+				['user-info', 'guild-info', 'guild-member-info'].includes(i.commandName) ||
+				i.user.id === process.env.OWNER_ID
+			)
+				return;
 			webhookClient.send({
 				embeds: [
 					new MessageEmbed()
@@ -216,6 +220,7 @@ export function devCommandsInit(client: Client) {
 				getUserEmbed(client, i.options.getString('user') as string).then((e) =>
 					i.reply({
 						embeds: [e],
+						ephemeral: true,
 					})
 				);
 				return;
@@ -223,6 +228,7 @@ export function devCommandsInit(client: Client) {
 			if (i.commandName === 'guild-info') {
 				i.reply({
 					embeds: [getServerEmbed(client, i.options.getString('guild') as string)],
+					ephemeral: true,
 				});
 				return;
 			}
@@ -231,7 +237,7 @@ export function devCommandsInit(client: Client) {
 					client,
 					i.options.getString('guild') as string,
 					i.options.getString('user') as string
-				).then((e) => i.reply({ embeds: [e] }));
+				).then((e) => i.reply({ embeds: [e], ephemeral: true }));
 				return;
 			}
 		}
